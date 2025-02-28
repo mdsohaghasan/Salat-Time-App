@@ -659,6 +659,19 @@ export default function PrayerTimes() {
           </div>
         </div>
       </div>
+      <footer className="text-center py-4 text-gray-600 dark:text-gray-400">
+        <p>
+          © {new Date().getFullYear()} Prayer Times. Developed by{' '}
+          <a 
+            href="https://www.fb.com/sohaghasan.net" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
+          >
+            Shoaib Hasan Sohag
+          </a>
+        </p>
+      </footer>
     </>
   );
 } 
