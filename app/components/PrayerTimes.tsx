@@ -489,7 +489,7 @@ export default function PrayerTimes() {
   return (
     <>
       <Navbar />
-      <div className={`min-h-screen bg-gradient-to-b from-green-50 to-green-100 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12 px-3 sm:px-4 ${hindSiliguri.className}`}>
+      <div className={`min-h-screen bg-green-100 dark:bg-gray-800 py-8 sm:py-12 px-3 sm:px-4 ${hindSiliguri.className}`}>
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
             <h1 
@@ -754,9 +754,9 @@ export default function PrayerTimes() {
           </div>
         </div>
       </div>
-      <div className="text-center text-gray-600 dark:text-gray-400 py-2">
+      <div className="text-center py-4 bg-green-100 dark:bg-gray-800 border-b border-green-200 dark:border-gray-700">
         {userLocation ? (
-          <p>
+          <p className="text-gray-600 dark:text-gray-400">
             {language === 'bn' 
               ? `আপনার বর্তমান অবস্থান: ${userLocation.nameBangla || userLocation.name}`
               : `Your current location: ${userLocation.name}`}
@@ -769,7 +769,7 @@ export default function PrayerTimes() {
           </p>
         ) : null}
       </div>
-      <footer className="text-center py-4 text-gray-600 dark:text-gray-400">
+      <footer className="text-center py-4 text-gray-600 dark:text-gray-400 bg-green-100 dark:bg-gray-800">
         <p>
           © {new Date().getFullYear()} Prayer Times. Developed by{' '}
           <a 
