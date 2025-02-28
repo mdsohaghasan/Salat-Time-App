@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { format, addDays } from 'date-fns';
+import { format, addDays, parseISO, parse } from 'date-fns';
 
 // Add font import
 import { Hind_Siliguri } from 'next/font/google';
@@ -284,6 +284,7 @@ export default function PrayerTimes() {
   const [selectedDistrict, setSelectedDistrict] = useState<District>(districts[0]);
   const [selectedMadhhab, setSelectedMadhhab] = useState<Madhhab>(madhhabs[0]);
   const [language, setLanguage] = useState<'bn' | 'en'>('bn');
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
 
   useEffect(() => {
     // Initialize language from localStorage
@@ -315,10 +316,10 @@ export default function PrayerTimes() {
     const fetchPrayerTimes = async () => {
       try {
         setLoading(true);
-        const today = format(new Date(), 'dd-MM-yyyy');
+        const formattedDate = format(parseISO(selectedDate), 'dd-MM-yyyy');
         
         const response = await fetch(
-          `https://api.aladhan.com/v1/timings/${today}?latitude=${selectedDistrict.latitude}&longitude=${selectedDistrict.longitude}&method=${selectedMadhhab.method}`
+          `https://api.aladhan.com/v1/timings/${formattedDate}?latitude=${selectedDistrict.latitude}&longitude=${selectedDistrict.longitude}&method=${selectedMadhhab.method}`
         );
         
         if (!response.ok) {
@@ -335,9 +336,25 @@ export default function PrayerTimes() {
     };
 
     fetchPrayerTimes();
-  }, [selectedDistrict, selectedMadhhab]); // Refetch when district or madhhab changes
+  }, [selectedDistrict, selectedMadhhab, selectedDate]);
 
   const t = translations[language];
+
+  // Format the date for display
+  const formatDateForDisplay = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    return format(date, 'dd/MM/yyyy');
+  };
+
+  // Parse the displayed date back to yyyy-MM-dd format
+  const parseDateFromDisplay = (dateStr: string) => {
+    try {
+      const date = parse(dateStr, 'dd/MM/yyyy', new Date());
+      return format(date, 'yyyy-MM-dd');
+    } catch {
+      return dateStr;
+    }
+  };
 
   if (loading) {
     return (
@@ -380,63 +397,98 @@ export default function PrayerTimes() {
       <div className={`min-h-screen bg-gradient-to-b from-green-50 to-green-100 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12 px-3 sm:px-4 ${hindSiliguri.className}`}>
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-center text-green-800 dark:text-green-400 mb-2">
-              {t.prayerTimesTitle}
+            <h1 
+              className="text-2xl sm:text-3xl font-bold text-center text-green-800 dark:text-green-400 mb-2"
+              itemScope 
+              itemType="https://schema.org/WebPage"
+            >
+              <span itemProp="name">{t.prayerTimesTitle}</span>
             </h1>
-            <div className="flex flex-col items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-              <div className="text-xl sm:text-2xl font-semibold text-center text-green-600 dark:text-green-400">
-                {format(currentTime, 'hh:mm a')}
+            <div 
+              role="region" 
+              aria-label="Prayer time controls"
+              className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-3xl"
+            >
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                  {t.selectDistrict}
+                </label>
+                <select
+                  value={selectedDistrict.name}
+                  onChange={(e) => {
+                    const district = districts.find(d => d.name === e.target.value);
+                    if (district) setSelectedDistrict(district);
+                  }}
+                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg bg-white dark:bg-gray-700 border border-green-300 dark:border-green-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:text-white"
+                >
+                  {districts.map((district) => (
+                    <option key={district.name} value={district.name}>
+                      {language === 'bn' ? district.nameBangla : district.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    {t.selectDistrict}
-                  </label>
-                  <select
-                    value={selectedDistrict.name}
-                    onChange={(e) => {
-                      const district = districts.find(d => d.name === e.target.value);
-                      if (district) setSelectedDistrict(district);
-                    }}
-                    className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg bg-white dark:bg-gray-700 border border-green-300 dark:border-green-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:text-white"
-                  >
-                    {districts.map((district) => (
-                      <option key={district.name} value={district.name}>
-                        {language === 'bn' ? district.nameBangla : district.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    {t.selectMadhhab}
-                  </label>
-                  <select
-                    value={selectedMadhhab.name}
-                    onChange={(e) => {
-                      const madhhab = madhhabs.find(m => m.name === e.target.value);
-                      if (madhhab) setSelectedMadhhab(madhhab);
-                    }}
-                    className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg bg-white dark:bg-gray-700 border border-green-300 dark:border-green-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:text-white"
-                  >
-                    {madhhabs.map((madhhab) => (
-                      <option key={madhhab.name} value={madhhab.name}>
-                        {language === 'bn' ? madhhab.nameBangla : madhhab.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                  {t.selectMadhhab}
+                </label>
+                <select
+                  value={selectedMadhhab.name}
+                  onChange={(e) => {
+                    const madhhab = madhhabs.find(m => m.name === e.target.value);
+                    if (madhhab) setSelectedMadhhab(madhhab);
+                  }}
+                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg bg-white dark:bg-gray-700 border border-green-300 dark:border-green-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:text-white"
+                >
+                  {madhhabs.map((madhhab) => (
+                    <option key={madhhab.name} value={madhhab.name}>
+                      {language === 'bn' ? madhhab.nameBangla : madhhab.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                  {t.selectDate}
+                </label>
+                <input
+                  type="text"
+                  value={formatDateForDisplay(selectedDate)}
+                  onChange={(e) => {
+                    const newDate = parseDateFromDisplay(e.target.value);
+                    if (newDate) {
+                      setSelectedDate(newDate);
+                    }
+                  }}
+                  className="w-full px-2 sm:px-4 py-2 text-base sm:text-lg bg-white dark:bg-gray-700 border border-green-300 dark:border-green-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:text-white [&::-webkit-calendar-picker-indicator]:dark:invert"
+                  placeholder="DD/MM/YYYY"
+                  onFocus={(e) => {
+                    e.target.type = 'date';
+                    e.target.value = selectedDate;
+                  }}
+                  onBlur={(e) => {
+                    e.target.type = 'text';
+                    e.target.value = formatDateForDisplay(selectedDate);
+                  }}
+                />
               </div>
             </div>
             {prayerTimes && (
               <>
-                <div className="text-center mb-6">
-                  <p className="text-gray-600 dark:text-gray-300 text-lg">
+                <div 
+                  role="contentinfo" 
+                  aria-label="Current date"
+                  className="text-center mb-6"
+                >
+                  <p className="text-gray-600 dark:text-gray-300 text-lg py-3 my-2">
                     {language === 'bn' 
-                      ? format(new Date(prayerTimes.date.readable), 'dd').split('').map(digit => englishToBengaliNumerals[digit] || digit).join('') + ' ' +
-                        gregorianMonthsBengali[format(new Date(prayerTimes.date.readable), 'MMM')] + ' ' +
-                        format(new Date(prayerTimes.date.readable), 'yyyy').split('').map(digit => englishToBengaliNumerals[digit] || digit).join('')
-                      : format(new Date(prayerTimes.date.readable), 'dd MMMM yyyy')}
+                      ? `আজ `
+                      : `Today is `}
+                    <span className="text-2xl font-bold text-green-600 dark:text-green-400 px-2">
+                      {language === 'bn'
+                        ? bengaliDayNames[format(new Date(prayerTimes.date.readable), 'EEEE')]
+                        : format(new Date(prayerTimes.date.readable), 'EEEE')}
+                    </span>
                   </p>
                   <p className="text-gray-600 dark:text-gray-300 font-medium text-lg">
                     {language === 'bn'
@@ -445,11 +497,13 @@ export default function PrayerTimes() {
                   </p>
                 </div>
 
-                {/* Current Time Card */}
-                <div className="mb-6 sm:mb-8 rounded-xl p-4 sm:p-6 text-center bg-gradient-to-r from-green-50 via-green-100 to-green-50 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 border-2 border-green-200 dark:border-green-600">
+                <div 
+                  role="main"
+                  aria-label="Current prayer information"
+                  className="mb-6 sm:mb-8 rounded-xl p-4 sm:p-6 text-center bg-gradient-to-r from-green-50 via-green-100 to-green-50 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 border-2 border-green-200 dark:border-green-600"
+                >
                   {currentPrayer && (
                     <div className="grid md:grid-cols-2 gap-4 sm:gap-8 relative px-2 sm:px-4">
-                      {/* Prayer Time Section */}
                       <div className="space-y-3 sm:space-y-4 mx-2 sm:mx-3">
                         <div className="bg-white dark:bg-gray-800 rounded-lg px-4 sm:px-8 py-4 sm:py-5 shadow-md h-full">
                           <div className="mb-3 sm:mb-4">
@@ -486,10 +540,8 @@ export default function PrayerTimes() {
                         </div>
                       </div>
 
-                      {/* Vertical Divider */}
                       <div className="hidden md:block absolute right-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-green-700 via-green-800 to-green-700 dark:from-green-500 dark:via-green-400 dark:to-green-500"></div>
 
-                      {/* Progress Section */}
                       <div className="space-y-3 sm:space-y-4 mx-2 sm:mx-3">
                         <div className="bg-white dark:bg-gray-800 rounded-lg px-4 sm:px-8 py-4 sm:py-5 shadow-md h-full">
                           <div className="mb-3 sm:mb-4">
@@ -556,8 +608,11 @@ export default function PrayerTimes() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {/* Tahajjud Card */}
+                <div 
+                  role="list"
+                  aria-label="Prayer schedule"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                >
                   {tahajjudTime && (
                     <div className={`rounded-xl p-4 sm:p-6 text-center transform hover:scale-105 transition-transform duration-200 border-2
                       ${currentPrayer === 'Tahajjud' 
@@ -573,7 +628,6 @@ export default function PrayerTimes() {
                       </div>
                     </div>
                   )}
-                  {/* Regular Prayer Cards */}
                   {prayerOrder.map((name, index) => {
                     if (name === 'Sunrise') return null;
                     const prayerKey = name.toLowerCase() as keyof typeof t;

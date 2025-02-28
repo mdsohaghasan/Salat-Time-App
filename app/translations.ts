@@ -9,6 +9,7 @@ export type TranslationType = {
   prayerTimesTitle: string;
   selectDistrict: string;
   selectMadhhab: string;
+  selectDate: string;
   currentWakt: string;
   timeRange: string;
   remainingTime: string;
@@ -37,9 +38,10 @@ export const translations: Record<'en' | 'bn', TranslationType> = {
     ramadanCalendar: 'Ramadan Calendar',
 
     // Prayer Times
-    prayerTimesTitle: 'Bangladesh Prayer Times Schedule',
+    prayerTimesTitle: 'Prayer Times Schedule',
     selectDistrict: 'Select District',
     selectMadhhab: 'Select Madhhab',
+    selectDate: 'Select Date',
     currentWakt: 'Current Time',
     timeRange: 'Time Range',
     remainingTime: 'Remaining Time',
@@ -66,9 +68,10 @@ export const translations: Record<'en' | 'bn', TranslationType> = {
     ramadanCalendar: 'রমজান ক্যালেন্ডার',
 
     // Prayer Times
-    prayerTimesTitle: 'বাংলাদেশের নামাজের সময়সূচী',
+    prayerTimesTitle: 'নামাজের সময়সূচী',
     selectDistrict: 'জেলা নির্বাচন করুন',
-    selectMadhhab: 'মাজহাব নির্বাচন করুন',
+    selectMadhhab: 'মাযহাব নির্বাচন করুন',
+    selectDate: 'তারিখ নির্বাচন করুন',
     currentWakt: 'বর্তমান ওয়াক্ত',
     timeRange: 'সময়সীমা',
     remainingTime: 'অবশিষ্ট সময়',
