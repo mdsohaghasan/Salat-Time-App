@@ -50,6 +50,16 @@ interface Madhhab {
   method: number;
 }
 
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+interface LocationInfo {
+  name: string;
+  nameBangla?: string;
+}
+
 const madhhabs: Madhhab[] = [
   { name: 'Hanafi', nameBangla: 'হানাফি', method: 1 },
   { name: 'Shafi', nameBangla: 'শাফিঈ', method: 4 },
@@ -276,6 +286,42 @@ const bengaliDayNames: { [key: string]: string } = {
   'Saturday': 'শনিবার'
 };
 
+const getLocation = (): Promise<Coordinates> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+};
+
+const getLocationName = async (coords: Coordinates): Promise<LocationInfo> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`
+    );
+    const data = await response.json();
+    return {
+      name: data.address.city || data.address.town || data.address.village || data.address.suburb,
+      nameBangla: data.address.city || data.address.town || data.address.village || data.address.suburb // You might want to add Bengali translation here
+    };
+  } catch (error) {
+    throw new Error('Failed to get location name');
+  }
+};
+
 export default function PrayerTimes() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime | null>(null);
   const [loading, setLoading] = useState(true);
@@ -285,6 +331,8 @@ export default function PrayerTimes() {
   const [selectedMadhhab, setSelectedMadhhab] = useState<Madhhab>(madhhabs[0]);
   const [language, setLanguage] = useState<'bn' | 'en'>('bn');
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [userLocation, setUserLocation] = useState<LocationInfo | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initialize language from localStorage
@@ -338,6 +386,26 @@ export default function PrayerTimes() {
     fetchPrayerTimes();
   }, [selectedDistrict, selectedMadhhab, selectedDate]);
 
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const coords = await getLocation();
+        const locationInfo = await getLocationName(coords);
+        setUserLocation(locationInfo);
+        
+        // Find the nearest district
+        const nearest = findNearestDistrict(coords.latitude, coords.longitude, districts);
+        if (nearest) {
+          setSelectedDistrict(nearest);
+        }
+      } catch (error) {
+        setLocationError(error instanceof Error ? error.message : 'Failed to get location');
+      }
+    };
+
+    fetchLocation();
+  }, []);
+
   const t = translations[language];
 
   // Format the date for display
@@ -390,6 +458,33 @@ export default function PrayerTimes() {
   ) : null;
 
   const currentPrayer = prayerTimes ? getCurrentPrayer(prayerTimes, currentTime) : null;
+
+  const findNearestDistrict = (lat: number, lon: number, districts: District[]): District | null => {
+    let nearest = null;
+    let minDistance = Infinity;
+
+    districts.forEach(district => {
+      const distance = calculateDistance(lat, lon, district.latitude, district.longitude);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = district;
+      }
+    });
+
+    return nearest;
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   return (
     <>
@@ -658,6 +753,21 @@ export default function PrayerTimes() {
             )}
           </div>
         </div>
+      </div>
+      <div className="text-center text-gray-600 dark:text-gray-400 py-2">
+        {userLocation ? (
+          <p>
+            {language === 'bn' 
+              ? `আপনার বর্তমান অবস্থান: ${userLocation.nameBangla || userLocation.name}`
+              : `Your current location: ${userLocation.name}`}
+          </p>
+        ) : locationError ? (
+          <p className="text-sm text-red-500">
+            {language === 'bn'
+              ? 'অবস্থান পাওয়া যায়নি। অনুগ্রহ করে অবস্থান অ্যাক্সেস অনুমতি দিন।'
+              : 'Location not found. Please allow location access.'}
+          </p>
+        ) : null}
       </div>
       <footer className="text-center py-4 text-gray-600 dark:text-gray-400">
         <p>
