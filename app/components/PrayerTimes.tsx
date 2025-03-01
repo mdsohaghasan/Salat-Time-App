@@ -611,9 +611,7 @@ export default function PrayerTimes() {
                           </div>
 
                           <div>
-                            <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">
-                              {t.timeRange}
-                            </p>
+                           
                             {currentPrayer === 'Tahajjud' ? (
                               <div>
                                 <div className="font-mono text-2xl sm:text-3xl font-bold text-green-900 whitespace-nowrap">
@@ -641,7 +639,7 @@ export default function PrayerTimes() {
                         <div className="bg-white dark:bg-gray-800 rounded-lg px-4 sm:px-8 py-4 sm:py-5 shadow-md h-full">
                           <div className="mb-3 sm:mb-4">
                             <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">
-                              {t.remainingTime}
+                            {language === 'bn' ? prayerNamesBangla[currentPrayer] : currentPrayer} {t.remainingTime}
                             </p>
                             <div className="font-mono text-4xl sm:text-5xl font-extrabold text-green-700">
                               {currentPrayer === 'Tahajjud'
@@ -655,9 +653,7 @@ export default function PrayerTimes() {
                             </div>
                           </div>
 
-                          <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">
-                            {t.completed}
-                          </div>
+                          
                           <div className="flex items-center gap-3">
                             <div className="flex-1">
                               <div className="w-full bg-gray-200 rounded-full h-3">

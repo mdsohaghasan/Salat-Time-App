@@ -74,7 +74,7 @@ export const translations: Record<'en' | 'bn', TranslationType> = {
     selectDate: 'তারিখ নির্বাচন করুন',
     currentWakt: 'বর্তমান ওয়াক্ত',
     timeRange: 'সময়সীমা',
-    remainingTime: 'অবশিষ্ট সময়',
+    remainingTime: 'এর সময় বাকি আছে',
     completed: 'সম্পন্ন হয়েছে',
     hijri: 'হিজরি',
 
